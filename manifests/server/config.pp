@@ -78,14 +78,23 @@ class mcollective::server::config {
       source => $::mcollective::ssl_server_public,
     }
 
-    file { $::mcollective::ssl_server_private_path:
-      owner     => 'root',
-      group     => '0',
-      mode      => '0400',
-      show_diff => false,
-      source    => $::mcollective::ssl_server_private,
+    if $::mcollective::ssl_server_private {
+      file { $::mcollective::ssl_server_private_path:
+        owner     => 'root',
+        group     => '0',
+        mode      => '0400',
+        show_diff => false,
+        source    => $::mcollective::ssl_server_private,
+      }
+    } else {
+      file { $::mcollective::ssl_server_private_path:
+        owner   => 'root',
+        group   => '0',
+        mode    => '0400',
+        show_diff => false,
+        content => $::mcollective::ssl_server_private_content,
+      }
     }
-
   }
 
   $middleware_multiple_ports = str2bool($mcollective::middleware_multiple_ports)

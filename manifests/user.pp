@@ -20,14 +20,15 @@ define mcollective::user(
   # duplication of $ssl_ca_cert, $ssl_server_public, $ssl_server_private, $connector,
   # $middleware_ssl, $middleware_hosts, and $securityprovider parameters to
   # allow for spec testing.  These are otherwise considered private.
-  $ssl_ca_cert       = undef,
-  $ssl_server_public = undef,
-  $ssl_server_private= undef,
-  $middleware_hosts  = undef,
-  $middleware_ssl    = undef,
-  $securityprovider  = undef,
-  $connector         = undef,
-  $ssl_ciphers       = undef,
+  $ssl_ca_cert                = undef,
+  $ssl_server_public          = undef,
+  $ssl_server_private         = undef,
+  $ssl_server_private_content = undef,
+  $middleware_hosts           = undef,
+  $middleware_ssl             = undef,
+  $securityprovider           = undef,
+  $connector                  = undef,
+  $ssl_ciphers                = undef,
 ) {
 
   include ::mcollective
@@ -35,7 +36,11 @@ define mcollective::user(
   $_middleware_ssl    = pick_default($middleware_ssl, $::mcollective::middleware_ssl)
   $_ssl_ca_cert       = pick_default($ssl_ca_cert, $::mcollective::ssl_ca_cert)
   $_ssl_server_public = pick_default($ssl_server_public, $::mcollective::ssl_server_public)
-  $_ssl_server_private= pick_default($ssl_server_private, $::mcollective::ssl_server_private)
+  if $ssl_server_private_content {
+    $_ssl_server_private = $ssl_server_private
+  } else {
+    $_ssl_server_private = pick_default($ssl_server_private, $::mcollective::ssl_server_private)
+  }
   $_middleware_hosts  = pick_default($middleware_hosts, $::mcollective::middleware_hosts)
   $_securityprovider  = pick_default($securityprovider, $::mcollective::securityprovider)
   $_connector         = pick_default($connector, $::mcollective::connector)
@@ -47,6 +52,9 @@ define mcollective::user(
   }
   if $private_key and $private_key_content {
     fail("Both a source and content cannot be defined for ${username} private key!")
+  }
+  if $ssl_server_private and $ssl_server_private_content {
+    fail("Both a source and content cannot be defined for ssl private key!")
   }
 
   # Variable interpolation in class parameters can be goofy (PUP-1080)
@@ -92,12 +100,22 @@ define mcollective::user(
       mode   => '0444',
     }
 
-    file { "${homedir_real}/.mcollective.d/credentials/private_keys/server_private.pem":
-      ensure => 'file',
-      source => $_ssl_server_private,
-      owner  => $username,
-      group  => $group,
-      mode   => '0400',
+    if $_ssl_server_private {
+      file { "${homedir_real}/.mcollective.d/credentials/private_keys/server_private.pem":
+          ensure => 'file',
+          source => $_ssl_server_private,
+          owner  => $username,
+          group  => $group,
+          mode   => '0400',
+      }
+    } else {
+      file { "${homedir_real}/.mcollective.d/credentials/private_keys/server_private.pem":
+          ensure => 'file',
+          content => $ssl_server_private_content,
+          owner  => $username,
+          group  => $group,
+          mode   => '0400',
+      }
     }
   }
 

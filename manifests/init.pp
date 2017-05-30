@@ -73,11 +73,12 @@ class mcollective (
   $client_package      = 'mcollective-client',
 
   # ssl certs
-  $ssl_ca_cert          = undef,
-  $ssl_server_public    = undef,
-  $ssl_server_private   = undef,
-  $ssl_client_certs     = 'puppet:///modules/mcollective/empty',
-  $ssl_client_certs_dir = undef, # default dependent on $confdir
+  $ssl_ca_cert                = undef,
+  $ssl_server_public          = undef,
+  $ssl_server_private         = undef,
+  $ssl_server_private_content = undef,
+  $ssl_client_certs           = 'puppet:///modules/mcollective/empty',
+  $ssl_client_certs_dir       = undef, # default dependent on $confdir
 
   # ssl ciphers
   $ssl_ciphers = undef,
@@ -103,6 +104,10 @@ class mcollective (
   $client_config_file_real = pick_default($client_config_file, "${confdir}/client.cfg")
 
   $ssldir = "${confdir}/ssl"
+
+  if $ssl_server_private and $ssl_server_private_content {
+    fail("Both a source and content cannot be defined for the ssl private key!")
+  }
 
   $ssl_client_certs_dir_real = pick_default($ssl_client_certs_dir, "${ssldir}/clients")
   $ssl_server_public_path    = "${ssldir}/server_public.pem"
