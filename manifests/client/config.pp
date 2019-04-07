@@ -22,7 +22,6 @@ class mcollective::client::config (
       group     => $group,
       mode      => $mode,
       path      => $mcollective::client_config_file_real,
-      show_diff => false,
       template  => 'mcollective/settings.cfg.erb',
     }
   }

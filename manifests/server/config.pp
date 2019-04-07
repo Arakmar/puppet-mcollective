@@ -9,7 +9,6 @@ class mcollective::server::config {
     group     => '0',
     mode      => '0400',
     path      => $mcollective::server_config_file_real,
-    show_diff => false,
     template  => 'mcollective/settings.cfg.erb',
   }
 
